@@ -1,0 +1,12 @@
+<site>
+  <form>
+    <input name="pixelCode" type="TextLine">
+    <label i18n="pixel-code.label">Facebook Pixel-ID</label>
+	  <help-text i18n="pixel-code.help-text">Genererer javascript-koden automatisk basert på Facebook Pixel-IDen.</help-text>
+	  <occurrences maximum="1" minimum="0"/>
+	</input>
+  </form>
+  <processors>
+    <response-processor name="add-facebook-pixel-script" order="20"/>
+  </processors>
+</site>
