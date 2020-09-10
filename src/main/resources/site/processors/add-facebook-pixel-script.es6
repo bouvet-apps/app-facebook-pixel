@@ -1,24 +1,73 @@
 const libs = {
-  freemarker: require("/site/lib/tineikt/freemarker"),
-  portal: require('/lib/xp/portal')
+  portal: require("/lib/xp/portal"),
+  cache: require("/lib/cache")
 };
 
-const view = resolve("facebook-pixel-script.ftl");
+const forceArray = (data) => {
+  if (data === undefined || data === null || (typeof data === "number" && isNaN(data))) return [];
+  return Array.isArray(data) ? data : [data];
+};
+
+const siteConfigCache = libs.cache.newCache({
+  size: 20,
+  expire: 10 * 60 // 10 minute cache
+});
 
 exports.responseProcessor = (req, res) => {
-	const siteConfig = libs.portal.getSiteConfig();
 
-	// If no pixel code added to app, send null so that no script will be generated.
-	const pixelCode = (siteConfig && siteConfig.pixelCode) ?  siteConfig.pixelCode : null;
-	const script = libs.freemarker.render(view, { pixelCode });
+  const site = libs.portal.getSite();
 
-	const headEnd = res.pageContributions.headEnd;
-    if (!headEnd) {
-    	res.pageContributions.headEnd = [];
+  if (site && site._path) {
+
+    const { pixelCode, cookieList } = siteConfigCache.get(`${req.branch}_${site._path}`, () => {
+      const config = libs.portal.getSiteConfig() || {};
+      config.cookieList = forceArray(config.disableCookies);
+      config.cookieList.push({ name: `${app.name.replace(/\./g, "-")}_disabled`, value: "true" });
+      return config;
+    });
+
+    if (pixelCode) {
+      let render = true;
+      for (let i = 0; i < cookieList.length; i++) {
+        const cookie = cookieList[i];
+
+        if (req.cookies[cookie.name] === cookie.value) {
+          render = false;
+          break;
+        }
+      }
+
+      if (render) {
+        const script = `
+          <!-- Facebook Pixel Code -->
+          <script>
+          !function(f,b,e,v,n,t,s)
+          {if(f.fbq)return;n=f.fbq=function(){n.callMethod?
+          n.callMethod.apply(n,arguments):n.queue.push(arguments)};
+          if(!f._fbq)f._fbq=n;n.push=n;n.loaded=!0;n.version='2.0';
+          n.queue=[];t=b.createElement(e);t.async=!0;
+          t.src=v;s=b.getElementsByTagName(e)[0];
+          s.parentNode.insertBefore(t,s)}(window, document,'script',
+          'https://connect.facebook.net/en_US/fbevents.js');
+          fbq('init', '${pixelCode}');
+          fbq('track', 'PageView');
+          </script>
+          <noscript>
+          <img height="1" width="1" style="display:none"
+              src="https://www.facebook.com/tr?id=${pixelCode}&ev=PageView&noscript=1"/>
+          </noscript>
+          <!-- End Facebook Pixel Code -->
+        `;
+
+        const headEnd = res.pageContributions.headEnd;
+        if (!headEnd) {
+          res.pageContributions.headEnd = [];
+        }
+
+        // Add contribution
+        res.pageContributions.headEnd.push(script);
+      }
     }
-
-    // Add contribution
-	res.pageContributions.headEnd.push(script);
-	
-	return res;
+  }
+  return res;
 };

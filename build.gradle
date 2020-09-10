@@ -62,11 +62,7 @@ dependencies {
     include "com.enonic.xp:lib-context:${xpVersion}"
     include "com.enonic.xp:lib-event:${xpVersion}"
     include "com.enonic.xp:lib-auth:${xpVersion}"
-    include 'com.enonic.lib:lib-http-client:2.0.0'
-    include 'com.github.tineikt:xp-lib-freemarker:1.1.6'
-    include "com.enonic.xp:lib-admin:${xpVersion}"
-    include "com.enonic.lib:lib-admin-ui:1.1.0"
-    include fileTree("build/private-libs") { include "*.jar"}
+    include 'com.enonic.lib:lib-cache:1.1.0'
 }
 
 repositories {
