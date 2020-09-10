@@ -14,24 +14,35 @@ const siteConfigCache = libs.cache.newCache({
 });
 
 exports.responseProcessor = (req, res) => {
-
   const site = libs.portal.getSite();
 
   if (site && site._path) {
 
-    const { pixelCode, cookieList } = siteConfigCache.get(`${req.branch}_${site._path}`, () => {
+    const { pixelCode, disableCookies } = siteConfigCache.get(`${req.branch}_${site._path}`, () => {
       const config = libs.portal.getSiteConfig() || {};
-      config.cookieList = forceArray(config.disableCookies);
-      config.cookieList.push({ name: `${app.name.replace(/\./g, "-")}_disabled`, value: "true" });
+      config.disableCookies = forceArray(config.disableCookies);
+      config.disableCookies.push({ name: `${app.name.replace(/\./g, "-")}_disabled`, value: "true" });
       return config;
     });
 
     if (pixelCode) {
       let render = true;
-      for (let i = 0; i < cookieList.length; i++) {
-        const cookie = cookieList[i];
 
-        if (req.cookies[cookie.name] === cookie.value) {
+      const cookies = req.cookies;
+      if (res.cookies) {
+        Object.keys(res.cookies).forEach((key) => {
+          if (res.cookies[key].value) {
+            cookies[key] = res.cookies[key].value;
+          } else {
+            cookies[key] = res.cookies[key];
+          }
+        });
+      }
+
+      for (let i = 0; i < disableCookies.length; i++) {
+        const disableCookie = disableCookies[i];
+
+        if (cookies[disableCookie.name] === disableCookie.value) {
           render = false;
           break;
         }
