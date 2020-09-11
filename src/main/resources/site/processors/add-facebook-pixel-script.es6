@@ -14,6 +14,10 @@ const siteConfigCache = libs.cache.newCache({
 });
 
 exports.responseProcessor = (req, res) => {
+  if (req.mode !== 'live') {
+    return res;
+  }
+
   const site = libs.portal.getSite();
 
   if (site && site._path) {
@@ -26,8 +30,6 @@ exports.responseProcessor = (req, res) => {
     });
 
     if (pixelCode) {
-      let render = true;
-
       const cookies = req.cookies;
       if (res.cookies) {
         Object.keys(res.cookies).forEach((key) => {
@@ -43,41 +45,38 @@ exports.responseProcessor = (req, res) => {
         const disableCookie = disableCookies[i];
 
         if (cookies[disableCookie.name] === disableCookie.value) {
-          render = false;
-          break;
+          return res;
         }
       }
 
-      if (render) {
-        const script = `
-          <!-- Facebook Pixel Code -->
-          <script>
-          !function(f,b,e,v,n,t,s)
-          {if(f.fbq)return;n=f.fbq=function(){n.callMethod?
-          n.callMethod.apply(n,arguments):n.queue.push(arguments)};
-          if(!f._fbq)f._fbq=n;n.push=n;n.loaded=!0;n.version='2.0';
-          n.queue=[];t=b.createElement(e);t.async=!0;
-          t.src=v;s=b.getElementsByTagName(e)[0];
-          s.parentNode.insertBefore(t,s)}(window, document,'script',
-          'https://connect.facebook.net/en_US/fbevents.js');
-          fbq('init', '${pixelCode}');
-          fbq('track', 'PageView');
-          </script>
-          <noscript>
-          <img height="1" width="1" style="display:none"
-              src="https://www.facebook.com/tr?id=${pixelCode}&ev=PageView&noscript=1"/>
-          </noscript>
-          <!-- End Facebook Pixel Code -->
-        `;
+      const script = `
+        <!-- Facebook Pixel Code -->
+        <script>
+        !function(f,b,e,v,n,t,s)
+        {if(f.fbq)return;n=f.fbq=function(){n.callMethod?
+        n.callMethod.apply(n,arguments):n.queue.push(arguments)};
+        if(!f._fbq)f._fbq=n;n.push=n;n.loaded=!0;n.version='2.0';
+        n.queue=[];t=b.createElement(e);t.async=!0;
+        t.src=v;s=b.getElementsByTagName(e)[0];
+        s.parentNode.insertBefore(t,s)}(window, document,'script',
+        'https://connect.facebook.net/en_US/fbevents.js');
+        fbq('init', '${pixelCode}');
+        fbq('track', 'PageView');
+        </script>
+        <noscript>
+        <img height="1" width="1" style="display:none"
+            src="https://www.facebook.com/tr?id=${pixelCode}&ev=PageView&noscript=1"/>
+        </noscript>
+        <!-- End Facebook Pixel Code -->
+      `;
 
-        const headEnd = res.pageContributions.headEnd;
-        if (!headEnd) {
-          res.pageContributions.headEnd = [];
-        }
-
-        // Add contribution
-        res.pageContributions.headEnd.push(script);
+      const headEnd = res.pageContributions.headEnd;
+      if (!headEnd) {
+        res.pageContributions.headEnd = [];
       }
+
+      // Add contribution
+      res.pageContributions.headEnd.push(script);
     }
   }
   return res;
