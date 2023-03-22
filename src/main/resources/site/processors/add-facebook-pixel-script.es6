@@ -83,14 +83,12 @@ exports.responseProcessor = (req, res) => {
       }
     }
 
-    const snippet = `<!-- Facebook Pixel Code --> \
-      <script> \
-      ${script} \
-      </script> \
-      <noscript> \
-        <img height="1" width="1" style="display:none" src="https://www.facebook.com/tr?id=${pixelCode}&ev=PageView&noscript=1"/> \
-      </noscript> \
-      <!-- End Facebook Pixel Code -->`;
+    const snippet = `<script> ${script} </script> `;
+
+    const noscriptSnippet = `
+    <noscript> \
+      <img height="1" width="1" style="display:none" src="https://www.facebook.com/tr?id=${pixelCode}&ev=PageView&noscript=1"/> \
+    </noscript> `;
 
     const headEnd = res.pageContributions.headEnd;
     if (!headEnd) {
@@ -100,8 +98,18 @@ exports.responseProcessor = (req, res) => {
       res.pageContributions.headEnd = [headEnd];
     }
 
+    const bodyBegin = res.pageContributions.bodyBegin;
+    if (!bodyBegin) {
+      res.pageContributions.bodyBegin = [];
+    }
+    else if (typeof (bodyBegin) == 'string') {
+      res.pageContributions.bodyBegin = [bodyBegin];
+    }
+
     // Add contribution
     res.pageContributions.headEnd.push(snippet);
+    res.pageContributions.bodyBegin.push(noscriptSnippet);
+
   }
   return res;
 };

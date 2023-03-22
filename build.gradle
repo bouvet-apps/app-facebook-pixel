@@ -12,10 +12,6 @@ app {
     systemVersion = xpVersion
 }
 
-ext {
-    deployDir = "/Users/ole.saggau/.enonic/sandboxes/local/home/deploy/"
-}
-
 group = 'com.github.bouvet-apps'
 
 compileJava.options.encoding = "UTF-8"
@@ -38,18 +34,11 @@ task frontend {
     outputs.dir "$buildDir/resources/main"
 }
 
-/* task deployApp {
+task deployApp {
     dependsOn(':deploy')
     group 'application'
     description 'Builds server-side components and deploys application'
-    doLast {
-        copy {
-            from "build/libs/${projectName}-${version}.jar"
-            into "${deployDir}"
-            rename ("${projectName}-${version}.jar", "${projectName}.jar")
-        }
-    }
-} */
+} 
 
 dependencies {
     compile "com.enonic.xp:core-api:${xpVersion}"
@@ -69,8 +58,8 @@ repositories {
 version = "${jarVersion}"
 
 node {
-    version = '12.16.0'
-    npmVersion = '6.13.4'
+    version = '16.16.0'
+    npmVersion = '8.11.0'
     download = true
 }
 
