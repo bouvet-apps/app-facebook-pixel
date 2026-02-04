@@ -1,17 +1,6 @@
 const libs = {
-  portal: require("/lib/xp/portal"),
-  cache: require("/lib/cache")
+  portal: require("/lib/xp/portal")
 };
-
-const forceArray = (data) => {
-  if (data === undefined || data === null || (typeof data === "number" && isNaN(data))) return [];
-  return Array.isArray(data) ? data : [data];
-};
-
-const siteConfigCache = libs.cache.newCache({
-  size: 20,
-  expire: 10 * 60 // 10 minute cache
-});
 
 const getDefaultScript = (pixelCode) => {
   const snippet = `!function(f,b,e,v,n,t,s) \
@@ -45,43 +34,18 @@ exports.responseProcessor = (req, res) => {
   }
 
   const site = libs.portal.getSite();
-
   const defaultDisable = app.name.replace(/\./g, "-") + "_disabled";
 
   if (site && site._path) {
-
-    const { pixelCode, disableCookies } = siteConfigCache.get(`${req.branch}_${site._path}`, () => {
-      const config = libs.portal.getSiteConfig() || {};
-      config.disableCookies = forceArray(config.disableCookies);
-      config.disableCookies.push({ name: defaultDisable, value: "true" });
-      return config;
-    });
+    const siteConfig = libs.portal.getSiteConfig() || {};
+    const pixelCode = siteConfig.pixelCode || "";
 
     if (!pixelCode) {
       return res;
     }
 
-    const cookies = req.cookies;
-      if (res.cookies) {
-        Object.keys(res.cookies).forEach((key) => {
-          if (res.cookies[key].value) {
-            cookies[key] = res.cookies[key].value;
-          } else {
-            cookies[key] = res.cookies[key];
-          }
-        });
-      }
-
     let script = getDefaultScript(pixelCode);
-    for (let cookieIndex = 0; cookieIndex < disableCookies.length; cookieIndex++) {
-      const disableCookie = disableCookies[cookieIndex];
-
-      // If disabled through cookie, add JavaScript for enabling later
-      if (cookies[disableCookie.name] === disableCookie.value) {
-        script = getConsentRequiredScript(script, defaultDisable);
-        break;
-      }
-    }
+    script = getConsentRequiredScript(script, defaultDisable);
 
     const snippet = `<script> ${script} </script> `;
 
