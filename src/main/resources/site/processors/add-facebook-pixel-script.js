@@ -47,12 +47,9 @@ exports.responseProcessor = (req, res) => {
     let script = getDefaultScript(pixelCode);
     script = getConsentRequiredScript(script, defaultDisable);
 
-    const snippet = `<script> ${script} </script> `;
-
-    const noscriptSnippet = `
-    <noscript> \
-      <img height="1" width="1" style="display:none" src="https://www.facebook.com/tr?id=${pixelCode}&ev=PageView&noscript=1" alt=""/> \
-    </noscript> `;
+    const snippet = `<!-- Facebook pixel --> \
+      <script> ${script} </script> \
+    <!-- End Facebook pixel -->`;
 
     const headEnd = res.pageContributions.headEnd;
     if (!headEnd) {
@@ -72,7 +69,6 @@ exports.responseProcessor = (req, res) => {
 
     // Add contribution
     res.pageContributions.headEnd.push(snippet);
-    res.pageContributions.bodyBegin.push(noscriptSnippet);
 
   }
   return res;
