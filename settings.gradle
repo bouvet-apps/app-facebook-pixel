@@ -1,4 +1,0 @@
-rootProject.name = projectName
-
-include 'frontend'
-project(':frontend').projectDir = file('src/frontend')
