@@ -17,10 +17,10 @@ const getDefaultScript = (pixelCode) => {
 };
 
 const getConsentRequiredScript = (script, defaultDisable) => {
-  const snippet = `var fpScript = "${script}"; \
+  const snippet = `const fpScript = "${script}"; \
       window.__RUN_ON_COOKIE_CONSENT__ = window.__RUN_ON_COOKIE_CONSENT__ || {}; \
       window.__RUN_ON_COOKIE_CONSENT__["${defaultDisable}"] = function () { \
-        var s = document.createElement("script"); \
+        const s = document.createElement("script"); \
         s.id = "facebook-pixel-consent"; \
         s.innerText = fpScript; \
         document.getElementsByTagName("head")[0].appendChild(s); \
