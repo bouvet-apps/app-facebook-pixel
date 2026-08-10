@@ -2,8 +2,12 @@ kind: "CMS"
 form:
   - type: "TextLine"
     name: "pixelCode"
-    label: "Facebook Pixel-ID"
-    helpText: "Genererer javascript-koden automatisk basert på Facebook Pixel-IDen."
+    label:
+      text: "Facebook Pixel-ID"
+      i18n: "pixel-code.label"
+    helpText:
+      text: "Genererer javascript-koden automatisk basert på Facebook Pixel-IDen."
+      i18n: "pixel-code.help-text"
     occurrences:
       min: 0
       max: 1
